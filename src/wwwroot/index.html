@@ -1,0 +1,65 @@
+<html>
+<head>
+	<script src="axios.min.js"></script>
+	<script src="vue.js"></script>
+	<script>
+		// Decent tutorial: https://coligo.io/vuejs-the-basics/
+
+		document.addEventListener("DOMContentLoaded", function (event) {
+			var vm = new Vue(
+				{
+					el: "#vue-instance",
+					data: {
+						items: []
+					},
+					created: function () {
+						var that = this;
+
+						axios.get("/api/values")
+							.then(function (response) {
+								// Replace the data
+								// See https://vuejs.org/v2/guide/list.html#Replacing-an-Array
+								that.items = that.items.concat(response.data);
+							})
+							.catch(function (error) {
+								console.log(error);
+							});
+					},
+					methods: {
+						add: function () {
+							var that = this;
+							var newItem = {
+								id: that.items.length,
+								name: document.getElementById("name").value,
+								price: parseFloat(document.getElementById("price").value)
+							};
+
+							axios.post("/api/values", newItem)
+								.then(function (response) {
+									that.items.push(newItem);
+									console.log(response);
+								})
+								.catch(function (error) {
+									console.log(error);
+								});
+						}
+					}
+				});
+		});
+	</script>
+</head>
+<body>
+	<div id="vue-instance">
+		<ul>
+			<li v-for="(index, item) in items">
+				{{ index }}. {{ item.name }} - ${{ item.price }}
+			</li>
+		</ul>
+
+		<h3>Add an item</h3>
+		<input type="text" id="name" placeholder="name" />
+		<input type="text" id="price" placeholder="price" />
+		<button @click="add" type="button">add</button>
+	</div>
+</body>
+</html>
