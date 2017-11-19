@@ -1,0 +1,135 @@
+<html>
+<head>
+    <script src="axios.min.js"></script>
+    <script src="vue.min.js"></script>
+    <script>
+        // Decent tutorial: https://coligo.io/vuejs-the-basics/
+        var vm;
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+            vm = new Vue(
+                {
+                    el: "#vue-instance",
+                    data: {
+                        items: [],
+                        mode: "None"
+                    },
+                    created: function () {
+                        created(this);
+                    },
+                    methods: {
+                        add: add,
+                        startAdd: startAdd,
+                        startUpdate: function (item) {
+                            startUpdate(item);
+                        },
+                        update: function () {
+                            console.log(this);
+                            update2(this);
+                        }
+                    }
+                });
+        });
+
+        function created(context) {
+
+            axios.get("/api/values")
+                .then(function (response) {
+                    // Replace the data
+                    // See https://vuejs.org/v2/guide/list.html#Replacing-an-Array
+                    context.items = context.items.concat(response.data);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+
+        function add() {
+            var that = this;
+            var newItem = {
+                id: that.items.length,
+                name: document.getElementById("name").value,
+                price: parseFloat(document.getElementById("price").value)
+            };
+
+            axios.post("/api/values", newItem)
+                .then(function (response) {
+                    that.items.push(newItem);
+                    console.log(response);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+
+        function startAdd() {
+            vm.mode = "Add";
+        }
+
+        function endAdd() {
+            vm.mode = "None";
+        }
+
+        function startUpdate(item) {
+            vm.mode = "Edit";
+        }
+
+        function endUpdate() {
+            vm.mode = "None";
+        }
+
+        function update2(context) {
+            var item = {};
+            var index = 0;
+
+
+            item.name = document.getElementById("name").value;
+            item.price = parseFloat(document.getElementById("price").value);
+
+            axios.put("/api/values/" + item.id, item)
+                .then(function (response) {
+                    console.log(`updated ${item.id}`);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+    </script>
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="vue-instance">
+        <ul>
+            <li v-for="(item, index) in items">
+                {{ index + 1 }}. {{ item.name }} - ${{ item.price }}
+                <button :key="item.id" v-on:click="startUpdate" type="button">Edit</button>
+            </li>
+        </ul>
+
+        <button v-on:click="startAdd" type="button">Add</button>
+
+        <template v-if="mode === 'Edit'">
+            <h3>Edit</h3>
+            <label>Name</label>
+            <input type="text" id="name" placeholder="name" v-model="item.name" />
+            <input type="text" id="price" placeholder="price" />
+            <button v-on:click="update" type="button">Update</button>
+        </template>
+        <template v-else-if="mode === 'Add'">
+            <h3>Add</h3>
+            <label>Name</label>
+            <input type="text" id="name" placeholder="name" />
+            <input type="text" id="price" placeholder="price" />
+            <button @click="add" type="button">add</button>
+        </template>
+    </div>
+</body>
+</html>
